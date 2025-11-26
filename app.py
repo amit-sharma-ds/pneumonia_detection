@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
 
@@ -17,12 +18,19 @@ model = load_pneumonia_model()
 # Preprocessing Function
 # -----------------------------
 def preprocess_image(image):
+    # Resize to 224x224 (CNN input)
     image = image.resize((224, 224))  
+    # Convert to grayscale
     image = image.convert("L")        
+    # Convert to numpy array
     image = np.array(image)
+    # Normalize
     image = image / 255.0             
+    # Expand dimensions
     image = np.expand_dims(image, axis=-1)
+    # Convert 1-channel → 3-channel
     image = np.repeat(image, 3, axis=-1)
+    # Batch dimension
     image = np.expand_dims(image, axis=0)
     return image
 
@@ -36,26 +44,21 @@ uploaded_file = st.file_uploader("Upload X-ray Image", type=["jpg", "jpeg", "png
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    
-    # Resize for display to avoid huge image
-    display_image = image.copy()
-    display_image.thumbnail((400, 400))  # max width/height 400px
-    
-    st.image(display_image, caption="Uploaded X-ray", use_column_width=False)
+    st.image(image, caption="Uploaded X-ray", use_column_width=True)
 
-    # Preprocess for model
+    # Preprocess the image
     img = preprocess_image(image)
 
-    # Prediction
+    # Make prediction
     pred = model.predict(img)[0][0]
     result = "PNEUMONIA DETECTED" if pred > 0.5 else "NORMAL"
 
-    # -----------------------------
-    # Prediction Result
-    # -----------------------------
     st.subheader("🔍 Prediction Result:")
     st.write(f"**Model Output Score:** {pred:.4f}")
 
+    # -----------------------------
+    # RESULT DISPLAY TEXT
+    # -----------------------------
     if result == "PNEUMONIA DETECTED":
         st.error("⚠️ **PNEUMONIA DETECTED**")
         st.markdown(
