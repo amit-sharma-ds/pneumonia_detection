@@ -27,6 +27,13 @@ def preprocess_image(image):
     return image
 
 # -----------------------------
+# Initialize Session State
+# -----------------------------
+if "result" not in st.session_state:
+    st.session_state.result = None
+    st.session_state.pred_score = None
+
+# -----------------------------
 # Streamlit UI
 # -----------------------------
 st.title("🩺 Pneumonia Detection using CNN")
@@ -40,23 +47,22 @@ if uploaded_file is not None:
     # Resize for display to avoid huge image
     display_image = image.copy()
     display_image.thumbnail((400, 400))  # max width/height 400px
-    
     st.image(display_image, caption="Uploaded X-ray", use_column_width=False)
 
-    # Preprocess for model
+    # Preprocess and predict
     img = preprocess_image(image)
-
-    # Prediction
     pred = model.predict(img)[0][0]
-    result = "PNEUMONIA DETECTED" if pred > 0.5 else "NORMAL"
 
-    # -----------------------------
-    # Prediction Result
-    # -----------------------------
+    # Store in session state
+    st.session_state.pred_score = pred
+    st.session_state.result = "PNEUMONIA DETECTED" if pred > 0.5 else "NORMAL"
+
+# Display prediction if available
+if st.session_state.result:
     st.subheader("🔍 Prediction Result:")
-    st.write(f"*Model Output Score:* {pred:.4f}")
+    st.write(f"*Model Output Score:* {st.session_state.pred_score:.4f}")
 
-    if result == "PNEUMONIA DETECTED":
+    if st.session_state.result == "PNEUMONIA DETECTED":
         st.error("⚠ *PNEUMONIA DETECTED*")
         st.markdown(
             """
@@ -65,13 +71,12 @@ if uploaded_file is not None:
 - Early detection can help in better treatment and management.
             """
         )
-else:
-    st.success("✅ *NORMAL – No Pneumonia Detected*")
-    st.markdown(
-        """
+    else:
+        st.success("✅ *NORMAL – No Pneumonia Detected*")
+        st.markdown(
+            """
 - The model indicates that the X-ray appears normal.
 - No signs of pneumonia were detected.
 - If symptoms persist, a medical checkup is still recommended.
-        """
-    )
-
+            """
+        )
