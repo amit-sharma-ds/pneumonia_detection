@@ -65,12 +65,13 @@ if uploaded_file is not None:
 - Early detection can help in better treatment and management.
             """
         )
-    else:
-        st.success("✅ *NORMAL – No Pneumonia Detected*")
-        st.markdown(
-            """
+else:
+    st.success("✅ *NORMAL – No Pneumonia Detected*")
+    st.markdown(
+        """
 - The model indicates that the X-ray appears normal.
 - No signs of pneumonia were detected.
 - If symptoms persist, a medical checkup is still recommended.
-            """
-        )
+        """
+    )
+
